@@ -3,13 +3,41 @@ import json
 import argparse
 from bids.grabbids import BIDSLayout
 from copy import deepcopy
-
 from os.path import exists
 
-
-def save_json(filename):
+def save_json(filename, subtask_dict):
     with open(filename, 'w') as fp:
         json.dump(subtask_dict, fp, indent=4, sort_keys=True)
+
+
+def get_dep_ids(id_sources):
+    dep_ids = []
+    while id_sources:
+        for id_source in id_sources:
+            filename = glob(id_source)
+            if filename and exists(filename[0]):
+                with open(filename[0]) as fp:
+                    dep_ids.append(fp.read().strip())
+                id_sources.remove(id_source)
+    return dep_ids
+
+
+def prepare_and_save_subtask(tool_class, app_name, filename, invocation_dict, participant_label, analysis_level,
+                             dep_ids):
+    subtask_dict = {
+        "tool-class": tool_class,
+        "description": "A {} BIDS app submission".format(app_name),
+        "share-wd-tid": "",
+        "parameters": deepcopy(invocation_dict),
+        "required-to-post-process": True
+    }
+    subtask_dict['parameters']['participant_label'] = participant_label
+    subtask_dict['parameters']['analysis_level'] = analysis_level
+    if dep_ids:
+        subtask_dict['prerequisites'] = dep_ids
+    print(subtask_dict)
+    save_json(filename, subtask_dict)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Example BIDS App entrypoint script.')
@@ -41,46 +69,33 @@ if __name__ == '__main__':
     print(levels)
     print(participants_to_analyze)
 
-    subtask_template_dict = {
-        "tool-class": args.app_descriptor_file,
-        "description": "A {} BIDS app submission".format(descriptor_dict['name']),
-        "share-wd-tid": "",
-        "parameters": {
-            "analysis_level": "",
-            "participant_label": ""
-        },
-        "required-to-post-process": True
-    }
-
-    ids = []
+    dep_ids = []
     for level in levels:
+        id_sources = []
+
         if level.startswith('participant'):
-            id_sources = []
             for participant in participants_to_analyze:
-                subtask_dict = deepcopy(subtask_template_dict)
-                subtask_dict['parameters'] = deepcopy(invocation_dict)
-                subtask_dict['parameters']['participant_label'] = participant
-                subtask_dict['parameters']['analysis_level'] = level
-                print(subtask_dict)
-                filename = "subtask_%s_%s.json"%(level, participant)
-                save_json(filename)
+                filename = "subtask_%s_%s.json" % (level, participant)
+                prepare_and_save_subtask(tool_class=args.app_descriptor_file,
+                                         app_name=descriptor_dict['name'],
+                                         filename=filename,
+                                         invocation_dict=invocation_dict,
+                                         participant_label=participant,
+                                         analysis_level=level,
+                                         dep_ids=dep_ids)
                 id_sources.append(filename.replace('.json', '.*bid'))
 
-            while id_sources:
-                for id_source in id_sources:
-                    filename = glob(id_source)
-                    if filename and exists(filename[0]):
-                        with open(filename[0]) as fp:
-                            ids.append(fp.read().strip())
-                        id_sources.remove(id_source)
+            dep_ids = get_dep_ids(id_sources)
 
         elif level.startswith('group'):
-            subtask_dict = deepcopy(subtask_template_dict)
-            subtask_dict['parameters'] = deepcopy(invocation_dict)
-            subtask_dict['parameters']['participant_label'] = participants_to_analyze
-            subtask_dict['parameters']['analysis_level'] = level
-            subtask_dict['prerequisites'] = ids
-            print(subtask_dict)
             filename = "subtask_%s.json" % (level)
-            save_json(filename)
-            ids = []
+            prepare_and_save_subtask(tool_class=args.app_descriptor_file,
+                                     app_name=descriptor_dict['name'],
+                                     filename=filename,
+                                     invocation_dict=invocation_dict,
+                                     participant_label=participants_to_analyze,
+                                     analysis_level=level,
+                                     dep_ids=dep_ids)
+            id_sources.append(filename.replace('.json', '.*bid'))
+            dep_ids = get_dep_ids(id_sources)
+
