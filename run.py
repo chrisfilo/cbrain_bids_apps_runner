@@ -27,7 +27,7 @@ def prepare_and_save_subtask(tool_class, app_name, filename, invocation_dict, pa
     subtask_dict = {
         "tool-class": tool_class,
         "description": "A {} BIDS app submission".format(app_name),
-        "share-wd-tid": "",
+        "share-wd-tid": 0,
         "parameters": deepcopy(invocation_dict),
         "required-to-post-process": True
     }
