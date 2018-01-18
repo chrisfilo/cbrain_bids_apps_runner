@@ -83,15 +83,15 @@ if __name__ == '__main__':
 
     print(levels)
     print(participants_to_analyze)
+    print(sessions_to_analyze)
 
     dep_ids = []
     for level in levels:
         id_sources = []
-
         if level.startswith('session') and session_support:
             for participant in participants_to_analyze:
                 for session in sessions_to_analyze:
-                    filename = "subtask_%s_%s_%s.json" % (level, participant, session)
+                    filename = "level-%s_sub-%s_ses-%s_subtask.json" % (level, participant, session)
                     prepare_and_save_subtask(tool_class=args.app_descriptor_file,
                                              app_name=descriptor_dict['name'],
                                              filename=filename,
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
         elif level.startswith('participant'):
             for participant in participants_to_analyze:
-                filename = "subtask_%s_%s.json" % (level, participant)
+                filename = "level-%s_sub-%s_subtask.json" % (level, participant)
                 prepare_and_save_subtask(tool_class=args.app_descriptor_file,
                                          app_name=descriptor_dict['name'],
                                          filename=filename,
@@ -120,7 +120,7 @@ if __name__ == '__main__':
             dep_ids = get_dep_ids(id_sources)
 
         elif level.startswith('group'):
-            filename = "subtask_%s.json" % (level)
+            filename = "level-%s_subtask.json" % (level)
             prepare_and_save_subtask(tool_class=args.app_descriptor_file,
                                      app_name=descriptor_dict['name'],
                                      filename=filename,

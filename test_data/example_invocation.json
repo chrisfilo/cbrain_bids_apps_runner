@@ -1,5 +1,4 @@
 {
   "bids_dir": "/inputs/bids_dir",
-  "output_dir_name": "ds114/skull-stripped/",
-  "participant_label": ["CTS207", "CTS204"]
+  "output_dir_name": "ds114/skull-stripped/"
 }
