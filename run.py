@@ -5,6 +5,7 @@ from bids.grabbids import BIDSLayout
 from copy import deepcopy
 from os.path import exists
 
+
 def save_json(filename, subtask_dict):
     with open(filename, 'w') as fp:
         json.dump(subtask_dict, fp, indent=4, sort_keys=True)
@@ -41,15 +42,13 @@ def prepare_and_save_subtask(tool_class, app_name, filename, invocation_dict, pa
     save_json(filename, subtask_dict)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='Example BIDS App entrypoint script.')
     parser.add_argument('app_descriptor_file', help='app descriptor')
     parser.add_argument('invocation_file', help='invocation file')
-
     args = parser.parse_args()
 
     descriptor_dict = json.load(open(args.app_descriptor_file))
-
     levels = None
     session_support = False
     for input in descriptor_dict['inputs']:
@@ -57,15 +56,11 @@ if __name__ == '__main__':
             levels = input['value-choices']
         elif input['id'] == 'session_label':
             session_support = True
-
     assert levels, "analysis_level must have value-choices"
-
     invocation_dict = json.load(open(args.invocation_file))
-
     bids_dir = invocation_dict['bids_dir']
-
     layout = BIDSLayout(bids_dir)
-    participants_to_analyze = []
+
     if 'participant_label' in invocation_dict.keys():
         participants_to_analyze = invocation_dict['participant_label']
     # for all subjects
@@ -132,3 +127,6 @@ if __name__ == '__main__':
             id_sources.append(filename.replace('.json', '.*bid'))
             dep_ids = get_dep_ids(id_sources)
 
+
+if __name__ == '__main__':
+    main()
